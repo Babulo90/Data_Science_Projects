@@ -1,0 +1,119 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+df = pd.read_csv(r"C:\Users\tamal\Documents\Amazon_Project\Amazon_Sales_data.csv")
+df.head(10)
+df.tail()
+df.shape
+df.columns
+df.dtypes
+df.isnull().sum()
+df.info()
+# Convert the 'Order Date' column to datetime format
+df['Order Date'] = pd.to_datetime(df['Order Date'])
+
+# Add the new datetime column to the dataframe
+df['Date'] = df['Order Date']
+
+# Display the first few rows to confirm the changes
+df.head(10)
+df.describe()
+
+# Monthly Sales Channel Trend
+df['Month'] = pd.to_datetime(df['Date']).dt.month
+sns.lineplot(x='Month', y='Sales Channel', data=df)
+plt.title('Monthly Sales Channel Trend')
+plt.show()
+
+# Year Wise Sales Channel Trend
+df['Year'] = pd.to_datetime(df['Date']).dt.year
+sns.lineplot(x='Year', y='Sales Channel', data=df)
+plt.title('Year-Wise Sales Channel Trend')
+plt.show()
+
+# Yearly Month-Wise Sales Channel Trend
+sns.lineplot(x='Month', y='Sales Channel', hue='Year', data=df)
+plt.title('Yearly Month-Wise Sales Channel Trend')
+plt.show()
+
+# exclude object (string) columns
+numeric_df = df.select_dtypes(exclude=[object])
+
+from pandas import get_dummies
+
+categorical_cols = ['Region', 'Country']  # replace with your categorical column names
+df_encoded = get_dummies(df, columns=categorical_cols)
+
+# Exclude non-numeric columns
+numeric_df = df.select_dtypes(exclude=[object])
+
+# Conduct correlation analysis on numeric columns
+correlation_matrix = numeric_df.corr()
+
+# Calculate average sales (Total Revenue)
+average_sales = df['Total Revenue'].mean()
+
+# Calculate sales variance (Total Revenue)
+sales_variance = df['Total Revenue'].var()
+
+# Identify potential outliers using the IQR method
+Q1 = df['Total Revenue'].quantile(0.25)
+Q3 = df['Total Revenue'].quantile(0.75)
+IQR = Q3 - Q1
+
+# Define outliers as points outside 1.5 * IQR above Q3 or below Q1
+outliers = df[(df['Total Revenue'] < (Q1 - 1.5 * IQR)) | (df['Total Revenue'] > (Q3 + 1.5 * IQR))]
+
+# Display results
+print(correlation_matrix)
+print(average_sales)
+print(sales_variance)
+print(outliers.shape[0])
+
+# Creating a line graph for sales trend over time
+
+plt.figure(figsize=(10, 6))
+plt.plot(df['Date'], df['Total Revenue'])
+plt.title('Sales Trend Over Time')
+plt.xlabel('Date')
+plt.ylabel('Total Revenue')
+plt.show()
+
+# Creating a bar graph for top-selling products
+
+top_products = df.groupby('Item Type')['Total Revenue'].sum().sort_values(ascending=False).head(10)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x=top_products.index, y=top_products.values)
+plt.title('Top-Selling Item Types')
+plt.xlabel('Item Type')
+plt.ylabel('Total Revenue')
+plt.xticks(rotation=45)  # Rotating x labels for better readability
+plt.show()
+
+# Creating a scatter plot for correlation between attributes
+
+sns.pairplot(df[['Total Revenue', 'Units Sold', 'Unit Price']])
+plt.show()
+
+# Creating a heatmap for correlation matrix
+
+numeric_data = df.select_dtypes(include=[float, int])
+
+# Compute the correlation matrix
+corr_matrix = numeric_df.corr()
+
+# Plot the heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', square=True)
+plt.title('Correlation Matrix')
+plt.show()
+
+# Creating a box plot for sales distribution by region
+
+sns.boxplot(x='Region', y='Total Revenue', data=df)
+plt.title('Sales Distribution by Region')
+plt.xlabel('Region')
+plt.ylabel('Total Revenue')
+plt.show()
